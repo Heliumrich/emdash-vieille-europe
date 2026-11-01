@@ -1,0 +1,25 @@
+---
+import LinkSignal from './LinkSignal.astro';
+import { getMenuWithCacheHint } from 'emdash';
+interface Props { current?: 'journal' | 'presentation'; title?: string; tagline?: string }
+const { current = 'journal', title = 'Vieille-Europe', tagline = 'Le chemin de fer de mon enfance, ressuscité en Tinplate 0.' } = Astro.props;
+const menu = await getMenuWithCacheHint('primary');
+if (Astro.cache?.enabled) Astro.cache.set(menu.cacheHint);
+const items = menu.data?.items.length ? menu.data.items : [{ label: 'Le journal', url: '/' }, { label: 'Présentation', url: '/presentation/' }, { label: 'Les archives', url: 'https://archive.vieille-europe.ch/' }];
+---
+<header class="site-header shell">
+  <div class="masthead-overline" aria-hidden="true">
+    <span>Chemins de fer &amp; mémoire européenne</span>
+    <span>Le carnet de Michel Pousaz</span>
+  </div>
+  <div class="masthead">
+    <a class="wordmark" href="/" aria-label={`${title}, accueil`}>{title}<span class="wordmark-stop">.</span></a>
+    <p>{tagline.split(',')[0]},<br />{tagline.split(',').slice(1).join(',')}</p>
+  </div>
+  <div class="navigation-bar">
+    <nav aria-label="Navigation principale">
+      {items.map(item => <a href={item.url} aria-current={(item.url === '/' && current === 'journal') || (item.url === '/presentation/' && current === 'presentation') ? 'page' : undefined}>{item.label}</a>)}
+    </nav>
+    <a class="contact-link" href="mailto:contact@vieille-europe.ch">Écrire à Michel <LinkSignal /></a>
+  </div>
+</header>

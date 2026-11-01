@@ -1,0 +1,21 @@
+---
+import { getTerm, getEmDashCollection } from 'emdash';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleList from './ArticleList.astro';
+import CursorPagination from './CursorPagination.astro';
+import { toArticle } from '../lib/content';
+interface Props { taxonomy: 'category' | 'tag' }
+const { taxonomy } = Astro.props;
+const term = await getTerm(taxonomy, Astro.params.slug!);
+if (!term) return Astro.rewrite('/404/');
+const cursor = Astro.url.searchParams.get('cursor') || undefined;
+const result = await getEmDashCollection('posts', { where: { [taxonomy]: term.slug }, status: 'published', limit: 10, cursor, orderBy: { published_at: 'desc' } });
+if (Astro.cache?.enabled) Astro.cache.set(result.cacheHint);
+---
+<BaseLayout title={term.label}>
+  <section class="journal-entries shell">
+    <header class="section-heading"><div><span class="eyebrow">Le carnet ferroviaire</span><h1>{term.label}</h1></div></header>
+    <ArticleList articles={result.entries.map(toArticle)} />
+    <CursorPagination basePath={`/${taxonomy}/${term.slug}/`} cursor={cursor} nextCursor={result.nextCursor} />
+  </section>
+</BaseLayout>

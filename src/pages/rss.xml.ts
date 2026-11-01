@@ -18,7 +18,7 @@ export const GET: APIRoute = async ({ site, url }) => {
 			if (!post.data.publishedAt) return null;
 			const pubDate = post.data.publishedAt.toUTCString();
 
-			const postUrl = new URL(`/posts/${post.id}`, siteUrl).href;
+			const postUrl = new URL(`/blog/${post.id}/`, siteUrl).href;
 			const title = escapeXml(post.data.title || "Untitled");
 			const description = escapeXml(post.data.excerpt || "");
 
@@ -40,7 +40,7 @@ export const GET: APIRoute = async ({ site, url }) => {
     <description>${escapeXml(siteTagline)}</description>
 	<link>${siteUrl.href}</link>
 	<atom:link href="${new URL("/rss.xml", siteUrl).href}" rel="self" type="application/rss+xml"/>
-    <language>${getSiteLocale() ?? "en-us"}</language>
+    <language>${getSiteLocale() ?? "fr-CH"}</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
 ${items}
   </channel>

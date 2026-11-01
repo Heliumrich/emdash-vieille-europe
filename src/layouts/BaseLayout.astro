@@ -1,0 +1,54 @@
+---
+import '@fontsource/libre-baskerville/latin-400.css';
+import '@fontsource/libre-baskerville/latin-400-italic.css';
+import '@fontsource/libre-baskerville/latin-700.css';
+import '@fontsource/source-sans-3/latin-400.css';
+import '@fontsource/source-sans-3/latin-600.css';
+import '@fontsource/source-sans-3/latin-700.css';
+import '../styles/vieille-europe.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ImageViewer from '../components/ImageViewer.astro';
+import { EmDashHead, EmDashBodyStart, EmDashBodyEnd } from 'emdash/ui';
+import { createPublicPageContext } from 'emdash/page';
+import { getSiteSettingsWithCacheHint } from 'emdash';
+interface Props {
+  title?: string;
+  description?: string;
+  section?: 'journal' | 'presentation';
+  image?: string;
+  noindex?: boolean;
+  publishedTime?: string;
+  content?: { collection: string; id: string; slug?: string };
+}
+const { title, description = 'Le carnet ferroviaire de Michel Pousaz. Trains suisses et européens, mémoire du rail et modélisme Tinplate à l’échelle 0.', section = 'journal', image = '/images/panorama.webp', noindex = false, publishedTime, content } = Astro.props;
+const settings = await getSiteSettingsWithCacheHint();
+if (Astro.cache?.enabled) Astro.cache.set(settings.cacheHint);
+const siteTitle = settings.data.title || 'Vieille-Europe';
+const pageTitle = title ? `${title} · ${siteTitle}` : `${siteTitle} · Le carnet ferroviaire de Michel Pousaz`;
+const canonical = new URL(`${Astro.url.pathname.replace(/\/+$/, '')}/`, Astro.site);
+const page = createPublicPageContext({ Astro, kind: content ? 'content' : 'custom', pageType: publishedTime ? 'article' : 'website', title: pageTitle, description, canonical: canonical.href, image: new URL(image, Astro.site).href, content, siteName: siteTitle, seo: { robots: noindex || Astro.url.pathname.startsWith('/recent/') || Astro.response.status === 404 ? 'noindex, follow' : undefined }, articleMeta: { publishedTime, author: 'Michel Pousaz' } });
+---
+<!doctype html>
+<html lang="fr-CH">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#203f36" />
+    <meta name="color-scheme" content="light" />
+    <title>{pageTitle}</title>
+    <EmDashHead page={page} />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title="Les articles de Vieille-Europe" href="/rss.xml" />
+  </head>
+  <body id="top">
+    <EmDashBodyStart page={page} />
+    <a class="skip-link" href="#contenu">Aller au contenu</a>
+    <Header current={section} title={siteTitle} tagline={settings.data.tagline} />
+    <main id="contenu" tabindex="-1"><slot /></main>
+    <Footer />
+    <ImageViewer />
+    <EmDashBodyEnd page={page} />
+  </body>
+</html>

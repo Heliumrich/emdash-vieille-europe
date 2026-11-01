@@ -1,0 +1,9 @@
+---
+import Journal from '../../components/Journal.astro';
+import { getJournalArticles, JOURNAL_PAGE_SIZE } from '../../lib/journal';
+const articles = await getJournalArticles('asc', Astro);
+const page = Number(Astro.params.page);
+if (!Number.isSafeInteger(page) || page < 1 || page > Math.max(1, Math.ceil(articles.length / JOURNAL_PAGE_SIZE))) return Astro.rewrite('/404/');
+if (page === 1) return Astro.redirect('/', 301);
+---
+<Journal articles={articles.slice((page - 1) * JOURNAL_PAGE_SIZE, page * JOURNAL_PAGE_SIZE)} page={page} totalArticles={articles.length} order="asc" />

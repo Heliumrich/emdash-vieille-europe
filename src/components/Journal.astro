@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleList from './ArticleList.astro';
+import Pagination from './Pagination.astro';
+import LinkSignal from './LinkSignal.astro';
+import type { Article } from '../lib/content';
+import { JOURNAL_PAGE_SIZE, journalPageHref, type JournalOrder } from '../lib/journal';
+interface Props { articles: Article[]; page: number; totalArticles: number; order?: JournalOrder; }
+const { articles, page, totalArticles, order = 'asc' } = Astro.props;
+const totalPages = Math.ceil(totalArticles / JOURNAL_PAGE_SIZE);
+const pageTitle = page > 1
+  ? `Le journal — page ${page}${order === 'desc' ? ' — récents d’abord' : ''}`
+  : order === 'desc' ? 'Le journal — récents d’abord' : undefined;
+---
+<BaseLayout title={pageTitle} section="journal">
+  {page === 1 && <>
+    <section class="journal-intro shell" aria-labelledby="intro-title">
+      <div class="intro-heading">
+        <span class="eyebrow"><span class="small-rule" aria-hidden="true"></span> Passion &amp; transmission</span>
+        <h1 id="intro-title">Tout un monde,<br />au fil du rail.</h1>
+      </div>
+      <div class="intro-copy">
+        <p>Les trains suisses et européens des années 1920 à 1960, leur histoire et leur seconde vie en modèles réduits.</p>
+        <p>Je vous ouvre les portes de mon chemin de fer miniature, pour partager la magie du Tinplate à l’échelle 0.</p>
+        <a class="text-link" href="/presentation/">Michel Pousaz, ferrovipathe <LinkSignal /></a>
+      </div>
+    </section>
+    <figure class="journal-panorama shell">
+      <div class="panorama-image"><img src="/images/panorama.webp" alt="Le réseau Tinplate 0 de Michel Pousaz, ses paysages suisses et sa collection de trains anciens." width="2400" height="673" fetchpriority="high" decoding="async" /></div>
+      <figcaption><span><span class="caption-number">Fig. 01</span> Un petit monde helvétique, entre mémoire et imagination.</span><span>Ma collection</span></figcaption>
+    </figure>
+  </>}
+  <section class="journal-entries shell" aria-labelledby="journal-title">
+    <header class="section-heading">
+      <div>
+        <span class="eyebrow">Le carnet ferroviaire</span>
+        {page === 1
+          ? <h2 id="journal-title">Les récits du journal</h2>
+          : <h1 id="journal-title">La suite du journal</h1>}
+      </div>
+      <div class="journal-controls">
+        <p>{totalArticles} articles</p>
+        <nav class="chronology-control" aria-label="Ordre des articles par date" data-order={order}>
+          <a href={`${journalPageHref(1, 'asc')}#journal-title`} aria-current={order === 'asc' ? 'true' : undefined} title="Du plus ancien au plus récent">Anciens d’abord</a>
+          <a href={`${journalPageHref(1, 'desc')}#journal-title`} aria-current={order === 'desc' ? 'true' : undefined} title="Du plus récent au plus ancien">Récents d’abord</a>
+        </nav>
+      </div>
+    </header>
+    <ArticleList articles={articles} start={(page - 1) * JOURNAL_PAGE_SIZE + 1} />
+    <Pagination current={page} total={totalPages} order={order} />
+  </section>
+  <aside class="author-note shell" aria-label="À propos de l’auteur">
+    <img src="/images/portrait.webp" alt="Michel Pousaz parmi les trains de son réseau miniature." width="160" height="160" loading="lazy" decoding="async" />
+    <div><span class="eyebrow">Derrière ces pages</span><p>« La passion, le culte et la thérapie par le Rail. »</p><a class="text-link" href="/presentation/">Faire connaissance avec Michel <LinkSignal /></a></div>
+  </aside>
+</BaseLayout>

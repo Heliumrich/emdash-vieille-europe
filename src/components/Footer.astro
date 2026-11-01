@@ -1,0 +1,37 @@
+---
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="shell footer-main">
+    <div class="footer-identity">
+      <a href="/" class="footer-wordmark">Vieille-Europe.</a>
+      <div>
+        <p>Un patrimoine à transmettre.<br />Une passion à faire vivre.</p>
+      </div>
+    </div>
+    <div class="footer-quote">
+      <p>« Préserver à tout prix notre identité helvético-européenne, telle est ma devise ! »</p>
+      <span>Michel Pousaz</span>
+    </div>
+    <nav class="footer-links" aria-label="Pour poursuivre la visite">
+      <a href="/presentation/">À propos de l’auteur</a>
+      <a href="https://www.youtube.com/@michelpousaz">Les films sur YouTube</a>
+      <a href="https://archive.vieille-europe.ch/">L’ancien blog, 2013–2023</a>
+      <a href="/rss.xml">S’abonner au fil RSS</a>
+      <a href="mailto:contact@vieille-europe.ch">contact@vieille-europe.ch</a>
+    </nav>
+  </div>
+  <div class="shell footer-bottom">
+    <span>© {year} Michel Pousaz</span>
+    <span>Trains suisses &amp; européens · Tinplate 0</span>
+    <a href="#top" data-back-top>Retour en haut <span aria-hidden="true">↑</span></a>
+  </div>
+</footer>
+<script>
+  document.querySelector('[data-back-top]')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    const logo = document.querySelector<HTMLAnchorElement>('.wordmark');
+    logo?.focus({ preventScroll: true });
+  });
+</script>

@@ -1,0 +1,15 @@
+---
+import { getEmDashEntry } from 'emdash';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleBody from '../components/ArticleBody.astro';
+if (Astro.params.slug === 'presentation') return Astro.redirect('/presentation/', 301);
+const { entry, cacheHint } = await getEmDashEntry('pages', Astro.params.slug!);
+if (!entry) return Astro.rewrite('/404/');
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+---
+<BaseLayout title={entry.data.title} section="presentation" content={{ collection: 'pages', id: entry.data.id, slug: entry.id }}>
+  <article class="shell article-page">
+    <header class="article-header"><h1 {...entry.edit.title}>{entry.data.title}</h1></header>
+    <div class="prose" {...entry.edit.content}><ArticleBody value={entry.data.content} /></div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,16 @@
+---
+import { sanitizeHref } from 'emdash';
+const { node } = Astro.props;
+const source = sanitizeHref(node.src || '');
+let id: string | undefined;
+try {
+  const url = new URL(source);
+  id = ['www.youtube-nocookie.com', 'www.youtube.com', 'youtube.com'].includes(url.hostname) ? url.pathname.match(/\/embed\/([\w-]{11})/)?.[1] : undefined;
+} catch { /* An empty editor block has no video yet. */ }
+---
+{id ? <div class="video-placeholder" data-youtube-id={id}>
+  <p>Un moment sur le réseau, en images et en son.</p>
+  <button type="button" data-load-youtube={id}>Lire la vidéo ici</button>
+  <a href={`https://www.youtube.com/watch?v=${id}`} target="_blank" rel="noopener noreferrer">Voir sur YouTube ↗</a>
+  <p class="video-note">La vidéo se charge uniquement à votre demande.</p>
+</div> : source ? <p><a href={source}>Ouvrir {node.title || 'le contenu intégré'}</a></p> : null}

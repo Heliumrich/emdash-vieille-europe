@@ -1,71 +1,20 @@
 ---
-interface Props {
-	/** Path of the first page, e.g. "/posts" */
-	basePath: string;
-	cursor?: string;
-	nextCursor?: string;
-}
-
-const { basePath, cursor, nextCursor } = Astro.props;
+import LinkSignal from './LinkSignal.astro';
+import { journalPageHref, type JournalOrder } from '../lib/journal';
+interface Props { current: number; total: number; order?: JournalOrder; }
+const { current, total, order = 'asc' } = Astro.props;
+const pageHref = (page: number) => journalPageHref(page, order);
 ---
-
-{
-	(cursor || nextCursor) && (
-		<nav class="pagination" aria-label="Pagination">
-			{cursor && (
-				<a href={basePath} class="btn btn--ghost">
-					<svg
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.75"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						aria-hidden="true"
-					>
-						<path d="M19 12H5" />
-						<path d="m12 19-7-7 7-7" />
-					</svg>
-					First page
-				</a>
-			)}
-			{nextCursor && (
-				<a
-					href={`${basePath}?cursor=${encodeURIComponent(nextCursor)}`}
-					class="btn btn--ghost pagination__next"
-				>
-					Next page
-					<svg
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.75"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						aria-hidden="true"
-					>
-						<path d="M5 12h14" />
-						<path d="m12 5 7 7-7 7" />
-					</svg>
-				</a>
-			)}
-		</nav>
-	)
-}
-
-<style>
-	.pagination {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--spacing-3);
-		margin-top: var(--spacing-10);
-	}
-
-	.pagination__next {
-		margin-inline-start: auto;
-	}
-
-	.pagination svg:dir(rtl) {
-		scale: -1 1;
-	}
-</style>
+{total > 1 && <nav class="pagination" aria-label="Pages du journal">
+  {current > 1
+    ? <a class="pagination-direction" href={pageHref(current - 1)} rel="prev"><LinkSignal direction="left" /> <span>Page précédente</span></a>
+    : <span class="pagination-direction is-disabled"><LinkSignal direction="left" /> <span>Page précédente</span></span>}
+  <ol class="pagination-numbers">
+    {Array.from({ length: total }, (_, index) => index + 1).map((page) => <li>
+      <a href={pageHref(page)} aria-current={page === current ? 'page' : undefined} aria-label={`Page ${page}${page === current ? ', page actuelle' : ''}`}>{page}</a>
+    </li>)}
+  </ol>
+  {current < total
+    ? <a class="pagination-direction" href={pageHref(current + 1)} rel="next"><span>Page suivante</span> <LinkSignal /></a>
+    : <span class="pagination-direction is-disabled"><span>Page suivante</span> <LinkSignal /></span>}
+</nav>}

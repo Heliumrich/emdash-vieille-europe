@@ -1,10 +1,11 @@
 import node from "@astrojs/node";
 import react from "@astrojs/react";
-import { defineConfig, fontProviders } from "astro/config";
+import { defineConfig } from "astro/config";
 import emdash, { local } from "emdash/astro";
 import { sqlite } from "emdash/db";
 
 export default defineConfig({
+	site: process.env.EMDASH_SITE_URL || "https://test.vieille-europe.ch",
 	output: "server",
 	adapter: node({
 		mode: "standalone",
@@ -22,29 +23,13 @@ export default defineConfig({
 	integrations: [
 		react(),
 		emdash({
-			database: sqlite({ url: "file:./data.db" }),
+			database: sqlite({ url: process.env.EMDASH_DATABASE_URL || "file:./data.db" }),
 			storage: local({
 				directory: "./uploads",
 				baseUrl: "/_emdash/api/media/file",
 			}),
-			siteUrl: "https://test.vieille-europe.ch",
+			siteUrl: process.env.EMDASH_SITE_URL || "https://test.vieille-europe.ch",
 		}),
-	],
-	fonts: [
-		{
-			provider: fontProviders.google(),
-			name: "Inter",
-			cssVariable: "--font-body",
-			weights: [400, 500, 600, 700],
-			fallbacks: ["sans-serif"],
-		},
-		{
-			provider: fontProviders.google(),
-			name: "JetBrains Mono",
-			cssVariable: "--font-mono",
-			weights: [400, 500],
-			fallbacks: ["monospace"],
-		},
-	],
+	],
 	devToolbar: { enabled: false },
 });

@@ -1,0 +1,280 @@
+<dialog class="image-viewer" aria-label="Photographie agrandie" aria-describedby="image-viewer-caption">
+  <div class="image-viewer-toolbar">
+    <span>Vieille-Europe · La photographie</span>
+    <span class="image-viewer-counter" aria-live="polite" aria-atomic="true"></span>
+    <div class="image-viewer-controls">
+      <button class="image-viewer-zoom-out" type="button" aria-label="Réduire le zoom" title="Réduire le zoom (−)" disabled><span aria-hidden="true">−</span></button>
+      <output class="image-viewer-zoom-level" aria-label="Niveau de zoom">100 %</output>
+      <button class="image-viewer-zoom-in" type="button" aria-label="Augmenter le zoom" title="Augmenter le zoom (+)"><span aria-hidden="true">+</span></button>
+      <button class="image-viewer-close" type="button" aria-label="Fermer la photographie" title="Fermer (Échap)" autofocus><span aria-hidden="true">×</span></button>
+    </div>
+  </div>
+  <div class="image-viewer-stage">
+    <button class="image-viewer-prev" type="button" aria-label="Photographie précédente" disabled><span aria-hidden="true">‹</span></button>
+    <figure class="image-viewer-figure">
+      <div class="image-viewer-canvas"></div>
+      <figcaption id="image-viewer-caption"></figcaption>
+    </figure>
+    <button class="image-viewer-next" type="button" aria-label="Photographie suivante" disabled><span aria-hidden="true">›</span></button>
+  </div>
+</dialog>
+<script>
+  import { fitImage, clampPan, zoomPan, type Point } from '../lib/image-zoom';
+  type GalleryImage = {
+    image: HTMLImageElement;
+    trigger: HTMLAnchorElement;
+    source: string;
+    srcset: string;
+    caption: string;
+  };
+
+  const viewer = document.querySelector<HTMLDialogElement>('.image-viewer');
+  const fullImage = document.createElement('img');
+  fullImage.alt = '';
+  fullImage.draggable = false;
+  const canvas = viewer?.querySelector<HTMLElement>('.image-viewer-canvas');
+  canvas?.append(fullImage);
+  const caption = viewer?.querySelector('figcaption');
+  const counter = viewer?.querySelector('.image-viewer-counter');
+  const previousButton = viewer?.querySelector<HTMLButtonElement>('.image-viewer-prev');
+  const nextButton = viewer?.querySelector<HTMLButtonElement>('.image-viewer-next');
+  const closeButton = viewer?.querySelector<HTMLButtonElement>('.image-viewer-close');
+  const zoomInButton = viewer?.querySelector<HTMLButtonElement>('.image-viewer-zoom-in');
+  const zoomOutButton = viewer?.querySelector<HTMLButtonElement>('.image-viewer-zoom-out');
+  const zoomLevel = viewer?.querySelector<HTMLOutputElement>('.image-viewer-zoom-level');
+  const articleGalleries = new Map<Element, GalleryImage[]>();
+  const preloadedSources = new Set<string>();
+  let activeGallery: GalleryImage[] = [];
+  let activeIndex = 0;
+  let previousFocus: HTMLElement | null = null;
+  let scale = 1;
+  let pan: Point = { x: 0, y: 0 };
+  const pointers = new Map<number, Point>();
+  const maxScale = 4;
+
+  function closeViewer() { viewer?.close(); }
+
+  function viewportSize() {
+    return { width: Math.max(1, canvas?.clientWidth || 1), height: Math.max(1, canvas?.clientHeight || 1) };
+  }
+
+  function fittedSize(entry: GalleryImage) {
+    return fitImage({
+      width: Number(entry.image.getAttribute('width')) || entry.image.naturalWidth || 1,
+      height: Number(entry.image.getAttribute('height')) || entry.image.naturalHeight || 1,
+    }, viewportSize());
+  }
+
+  function imageSize(entry: GalleryImage, zoom = 1) {
+    return `${Math.max(1, Math.ceil(fittedSize(entry).width * zoom))}px`;
+  }
+
+  function renderZoom() {
+    const entry = activeGallery[activeIndex];
+    if (!entry) return;
+    const size = fittedSize(entry);
+    pan = clampPan(pan, size, viewportSize(), scale);
+    fullImage.style.width = `${size.width}px`;
+    fullImage.style.height = `${size.height}px`;
+    fullImage.style.transform = `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${scale})`;
+    fullImage.sizes = imageSize(entry, scale);
+    if (canvas) canvas.dataset.zoomed = String(scale > 1);
+    if (zoomLevel) zoomLevel.value = `${Math.round(scale * 100)} %`;
+    if (zoomInButton) zoomInButton.disabled = scale >= maxScale;
+    if (zoomOutButton) zoomOutButton.disabled = scale <= 1;
+    // Exceptionally long captions scroll on their own, without moving the
+    // image or controls; make that scroll region reachable by keyboard.
+    if (caption) caption.tabIndex = caption.scrollHeight > caption.clientHeight ? 0 : -1;
+  }
+
+  function changeZoom(next: number, anchor: Point = { x: 0, y: 0 }) {
+    const clamped = Math.max(1, Math.min(maxScale, next));
+    pan = zoomPan(pan, anchor, anchor, scale, clamped);
+    scale = clamped;
+    renderZoom();
+  }
+
+  function displayImage(index: number) {
+    const entry = activeGallery[index];
+    if (!entry) return;
+    const focusedControl = document.activeElement;
+    activeIndex = index;
+    scale = 1;
+    pan = { x: 0, y: 0 };
+    pointers.clear();
+    canvas?.classList.remove('is-dragging');
+    // sizes is the fitted image width, not the screen width. The browser then
+    // chooses the preset using that width and the screen's device pixel ratio.
+    fullImage.sizes = imageSize(entry);
+    fullImage.srcset = entry.srcset;
+    fullImage.src = entry.source;
+    fullImage.alt = entry.image.alt;
+    if (caption) caption.textContent = entry.caption;
+    renderZoom();
+    if (counter) counter.textContent = `${index + 1} / ${activeGallery.length}`;
+    if (previousButton) previousButton.disabled = index === 0;
+    if (nextButton) nextButton.disabled = index === activeGallery.length - 1;
+    if (viewer?.open && (
+      (focusedControl === previousButton && previousButton?.disabled) ||
+      (focusedControl === nextButton && nextButton?.disabled)
+    )) {
+      const availableControl = [previousButton, nextButton, closeButton].find((button) => button && !button.disabled);
+      availableControl?.focus({ preventScroll: true });
+    }
+
+    for (const neighbour of [activeGallery[index - 1], activeGallery[index + 1]]) {
+      if (!neighbour) continue;
+      const size = imageSize(neighbour);
+      const cacheKey = `${neighbour.source}|${size}|${window.devicePixelRatio}`;
+      if (preloadedSources.has(cacheKey)) continue;
+      preloadedSources.add(cacheKey);
+      const preload = new Image();
+      preload.sizes = size;
+      preload.srcset = neighbour.srcset;
+      preload.src = neighbour.source;
+    }
+  }
+
+  document.querySelectorAll<HTMLImageElement>('.prose img').forEach((image) => {
+    if (!image.getAttribute('src') || image.closest('button')) return;
+    let trigger = image.closest<HTMLAnchorElement>('a');
+    const imageTarget = trigger?.href;
+    if (trigger && !trigger.hasAttribute('data-lightbox') && imageTarget && !/\/assets\/|\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(imageTarget)) return;
+    if (!trigger) {
+      trigger = document.createElement('a');
+      trigger.href = image.src;
+      image.before(trigger);
+      trigger.append(image);
+    }
+    const imageLabel = image.alt && !/^(image|img|photo)?\d*$/i.test(image.alt) ? image.alt : 'la photographie';
+    trigger.classList.add('enlarge-image');
+    trigger.setAttribute('aria-label', `Agrandir ${imageLabel}`);
+    trigger.setAttribute('aria-haspopup', 'dialog');
+
+    const figureCaption = image.closest('figure')?.querySelector('figcaption')?.textContent?.trim();
+    const entry: GalleryImage = {
+      image,
+      trigger,
+      source: trigger.href,
+      srcset: trigger.dataset.lightboxSrcset || image.srcset,
+      caption: trigger.dataset.caption || figureCaption || (imageLabel === 'la photographie' ? 'Utilisez la croix ou Échap pour fermer.' : image.alt),
+    };
+    const article = image.closest('.article-prose');
+    let gallery = [entry];
+    if (article) {
+      gallery = articleGalleries.get(article) || [];
+      gallery.push(entry);
+      articleGalleries.set(article, gallery);
+    }
+
+    trigger.addEventListener('click', (event) => {
+      if (!viewer || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      previousFocus = entry.trigger;
+      activeGallery = gallery;
+      viewer.showModal();
+      displayImage(gallery.indexOf(entry));
+    });
+  });
+
+  previousButton?.addEventListener('click', () => displayImage(activeIndex - 1));
+  nextButton?.addEventListener('click', () => displayImage(activeIndex + 1));
+  closeButton?.addEventListener('click', closeViewer);
+  zoomInButton?.addEventListener('click', () => changeZoom(scale * 1.5));
+  zoomOutButton?.addEventListener('click', () => changeZoom(scale / 1.5));
+
+  function localPoint(point: Point): Point {
+    const bounds = canvas!.getBoundingClientRect();
+    return { x: point.x - bounds.left - bounds.width / 2, y: point.y - bounds.top - bounds.height / 2 };
+  }
+
+  function gesture() {
+    const [first, second] = [...pointers.values()];
+    if (!first) return null;
+    return {
+      center: localPoint(second ? { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 } : first),
+      distance: second ? Math.hypot(first.x - second.x, first.y - second.y) : 0,
+    };
+  }
+
+  canvas?.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault();
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    canvas.setPointerCapture(event.pointerId);
+    canvas.classList.add('is-dragging');
+  });
+  canvas?.addEventListener('pointermove', (event) => {
+    if (!pointers.has(event.pointerId)) return;
+    event.preventDefault();
+    const before = gesture();
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const after = gesture();
+    if (!before || !after) return;
+    const nextScale = before.distance > 0 && after.distance > 0
+      ? Math.max(1, Math.min(maxScale, scale * after.distance / before.distance)) : scale;
+    pan = zoomPan(pan, before.center, after.center, scale, nextScale);
+    scale = nextScale;
+    renderZoom();
+  });
+  function releasePointer(event: PointerEvent) {
+    pointers.delete(event.pointerId);
+    if (!pointers.size) canvas?.classList.remove('is-dragging');
+  }
+  canvas?.addEventListener('pointerup', releasePointer);
+  canvas?.addEventListener('pointercancel', releasePointer);
+  canvas?.addEventListener('lostpointercapture', releasePointer);
+  canvas?.addEventListener('dblclick', (event) => {
+    event.preventDefault();
+    changeZoom(scale > 1 ? 1 : 2, localPoint({ x: event.clientX, y: event.clientY }));
+  });
+  let resizeFrame = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => { if (viewer?.open) renderZoom(); });
+  });
+  if (canvas) new ResizeObserver(() => { if (viewer?.open) renderZoom(); }).observe(canvas);
+  viewer?.addEventListener('keydown', (event) => {
+    if (!viewer.open || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      displayImage(activeIndex - 1);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      displayImage(activeIndex + 1);
+    } else if (['+', '=', '-', '0'].includes(event.key)) {
+      event.preventDefault();
+      changeZoom(event.key === '0' ? 1 : event.key === '-' ? scale / 1.5 : scale * 1.5);
+    }
+  });
+  // Only the explicit close control or Escape closes the dialog. Empty areas
+  // around navigation and the image are safe to tap, drag or double-click.
+  viewer?.addEventListener('close', () => {
+    fullImage.removeAttribute('src');
+    fullImage.removeAttribute('srcset');
+    fullImage.removeAttribute('sizes');
+    activeGallery = [];
+    pointers.clear();
+    canvas?.classList.remove('is-dragging');
+    if (counter) counter.textContent = '';
+    previousFocus?.focus({ preventScroll: true });
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-load-youtube]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.loadYoutube;
+      if (!id || !/^[A-Za-z0-9_-]{11}$/.test(id)) return;
+      const placeholder = button.closest('.video-placeholder') || button.parentElement;
+      if (!placeholder) return;
+      const frame = document.createElement('iframe');
+      frame.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+      frame.title = 'Film ferroviaire de Michel Pousaz sur YouTube';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.allowFullscreen = true;
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
+      frame.className = 'youtube-frame';
+      placeholder.replaceChildren(frame);
+      frame.focus();
+    });
+  });
+</script>

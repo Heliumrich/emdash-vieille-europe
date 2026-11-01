@@ -1,0 +1,11 @@
+---
+import { PortableText } from 'emdash/ui';
+import type { PortableTextBlock } from 'emdash';
+import { withFigureCaptions } from '../../scripts/article-blocks.mjs';
+import Photograph from './Photograph.astro';
+import Gallery from './Gallery.astro';
+import Film from './Film.astro';
+interface Props { value?: PortableTextBlock[] }
+const { value = [] } = Astro.props;
+---
+<PortableText value={withFigureCaptions(value)} components={{ type: { image: Photograph, gallery: Gallery, iframe: Film } }} />

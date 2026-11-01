@@ -1,0 +1,22 @@
+---
+import { Image, PortableText } from 'emdash/ui';
+import { photograph } from '../lib/photographs';
+import { imageVariants, GALLERY_WIDTHS, LIGHTBOX_WIDTHS } from '../lib/image-variants';
+const { node } = Astro.props;
+const photos = await Promise.all((node.images || []).map(async (image: Record<string, any>) => {
+  const photo = photograph(image);
+  const [reading, lightbox] = await Promise.all([imageVariants(photo.image, Astro.site, GALLERY_WIDTHS), imageVariants(photo.image, Astro.site, LIGHTBOX_WIDTHS)]);
+  return { image, photo, reading, lightbox };
+}));
+---
+<figure class="image-group">
+  <div class="image-pair" style={`grid-template-columns: repeat(${Math.max(1, Math.min(4, node.columns || 2))}, minmax(0, 1fr))`}>
+    {photos.map(({ image, photo, reading, lightbox }) => {
+      return <div>
+        <a href={lightbox.src || photo.full} data-lightbox data-lightbox-srcset={lightbox.srcset} data-caption={image.caption || undefined}><Image image={photo.image} quality={80} srcset={reading.srcset} sizes="auto, (max-width: 760px) calc(50vw - 26px), 395px" /></a>
+        {image.caption && <p class="gallery-image-caption">{image.caption}</p>}
+      </div>;
+    })}
+  </div>
+  {node.captionBlocks && <figcaption><PortableText value={node.captionBlocks} /></figcaption>}
+</figure>
