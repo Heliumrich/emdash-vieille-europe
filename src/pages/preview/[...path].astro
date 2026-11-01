@@ -1,0 +1,18 @@
+---
+export const prerender = false;
+import { getEmDashEntry, getRequestContext } from 'emdash';
+import ArticlePage from '../../components/ArticlePage.astro';
+import PresentationPage from '../../components/PresentationPage.astro';
+import ContentPage from '../../components/ContentPage.astro';
+const path = (Astro.params.path || '').replace(/\/+$/, '');
+const article = /^(?:blog|posts)\/[^/]+$/.test(path);
+const slug = article ? path.slice(path.indexOf('/') + 1) : path.replace(/^pages\//, '');
+const collection = article ? 'posts' : 'pages';
+if (!slug || slug.includes('/') || !getRequestContext()?.preview) return new Response('Not found', { status: 404 });
+const result = await getEmDashEntry(collection, slug);
+if (result.error) throw result.error;
+if (!result.entry || !result.isPreview) return new Response('Not found', { status: 404 });
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+---
+{article ? <ArticlePage entry={result.entry as any} /> : result.entry.id === 'presentation' ? <PresentationPage entry={result.entry as any} /> : <ContentPage entry={result.entry as any} />}

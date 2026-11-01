@@ -1,4 +1,6 @@
 ---
+import { taxonomyPaths } from '../../../scripts/content-paths';
+export async function getStaticPaths() { return taxonomyPaths('tag'); }
 import TaxonomyArchive from '../../components/TaxonomyArchive.astro';
 ---
 <TaxonomyArchive taxonomy="tag" />

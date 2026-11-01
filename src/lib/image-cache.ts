@@ -22,7 +22,7 @@ export async function cachedImage(request: Request, next: () => Promise<Response
   } catch { return next(); }
   let version: string;
   try {
-    const source = await stat(join(resolve('uploads'), storageKey));
+    const source = await stat(join(resolve(process.env.EMDASH_UPLOADS_DIR || 'uploads'), storageKey));
     if (!source.isFile()) return next();
     version = `${source.size}:${source.mtimeMs}:${source.ctimeMs}`;
   } catch { return next(); }

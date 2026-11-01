@@ -1,0 +1,14 @@
+---
+import type { ImageValue } from 'emdash';
+interface Props {
+  image?: ImageValue | string;
+  variants?: { src?: string; srcset?: string };
+  alt?: string;
+  width?: number;
+  height?: number;
+  sizes?: string;
+}
+const { image, variants = {}, alt, width, height, sizes } = Astro.props;
+const source = typeof image === 'string' ? image : image?.src || (image?.id ? `/_emdash/api/media/file/${image.meta?.storageKey || image.id}` : undefined);
+---
+{source && <img src={variants.src || source} srcset={variants.srcset} sizes={sizes} alt={alt ?? (typeof image === 'object' ? image.alt : '') ?? ''} width={width ?? (typeof image === 'object' ? image.width : undefined)} height={height ?? (typeof image === 'object' ? image.height : undefined)} loading="lazy" decoding="async" />}

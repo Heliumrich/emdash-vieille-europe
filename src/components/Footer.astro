@@ -1,4 +1,5 @@
 ---
+import VisitorCounter from './VisitorCounter.astro';
 const year = new Date().getFullYear();
 ---
 <footer class="site-footer">
@@ -7,6 +8,7 @@ const year = new Date().getFullYear();
       <a href="/" class="footer-wordmark">Vieille-Europe.</a>
       <div>
         <p>Un patrimoine à transmettre.<br />Une passion à faire vivre.</p>
+        <p class="footer-counter"><VisitorCounter /></p>
       </div>
     </div>
     <div class="footer-quote">

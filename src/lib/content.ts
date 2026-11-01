@@ -34,7 +34,7 @@ export function toArticle(entry: ContentEntry<Post>): Article {
 }
 
 // Fetch every cursor so numbered archives and neighbours also work past 100 posts.
-export async function getArticles(astro?: AstroGlobal): Promise<Article[]> {
+export async function getArticles(astro?: Pick<AstroGlobal, 'cache'>): Promise<Article[]> {
   const articles: Article[] = [];
   let cursor: string | undefined;
   do {

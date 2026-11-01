@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LinkSignal from './LinkSignal.astro';
+import ArticleBody from './ArticleBody.astro';
+import type { ContentEntry } from 'emdash';
+import type { Page } from '../../emdash-env';
+interface Props { entry: ContentEntry<Page> }
+const { entry } = Astro.props;
+---
+<BaseLayout title="Michel Pousaz, une vie au fil des rails" section="presentation" content={{ collection: "pages", id: entry.data.id, slug: entry.id }} image="/images/portrait.webp" description="Michel Pousaz partage sa passion du patrimoine ferroviaire suisse et européen. Une vie consacrée aux trains, à leur mémoire et à leur seconde vie en miniature.">
+  <article class="presentation-page shell">
+    <nav class="breadcrumb" aria-label="Fil d’Ariane"><a href="/">Le journal</a><span aria-hidden="true">/</span><span>Présentation</span></nav>
+    <header class="presentation-intro">
+      <div><span class="eyebrow">L’homme derrière le réseau</span><h1>Une vie<br />au fil des rails.</h1><p class="presentation-lead">Michel Pousaz, ferrovipathe<br />et passeur de mémoire.</p><span class="small-rule" aria-hidden="true"></span></div>
+      <figure><img src="/images/portrait.webp" alt="Michel Pousaz, passionné de chemins de fer, au milieu de son réseau Tinplate 0." width="1024" height="872" fetchpriority="high" /><figcaption>Michel Pousaz et son petit monde ferroviaire.</figcaption></figure>
+    </header>
+    <aside class="historical-note"><span class="eyebrow">Quelques mots avant la lecture</span><p>Le texte qui suit est la présentation historique de l’auteur, rédigée à l’époque de son réseau H0, entre 2009 et 2012. Sa passion s’est depuis prolongée dans le Tinplate à l’échelle 0. Nous en conservons ici la voix, les convictions et les souvenirs.</p></aside>
+    <div class="presentation-reading-layout"><div class="presentation-sidebar"><span class="eyebrow">Le témoignage</span><p>Préserver.<br />Transmettre.<br />Faire vivre.</p><figure><img src="/images/presentation.webp" alt="Portrait historique de Michel Pousaz devant son réseau H0." width="640" height="480" loading="lazy" /><figcaption>Au temps du réseau H0.</figcaption></figure></div><div class="prose presentation-prose" {...entry.edit.content}><ArticleBody value={entry.data.content} /></div></div>
+    <div class="presentation-end"><span class="eyebrow">Le voyage continue</span><h2>Entrez dans le petit monde<br />de Vieille-Europe.</h2><a class="button-link" href="/">Découvrir le journal <LinkSignal /></a></div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,6 @@
+---
+import { taxonomyPaths } from '../../../../../scripts/content-paths';
+import TaxonomyArchive from '../../../../components/TaxonomyArchive.astro';
+export async function getStaticPaths() { return taxonomyPaths('category', true); }
+---
+<TaxonomyArchive taxonomy="category" />

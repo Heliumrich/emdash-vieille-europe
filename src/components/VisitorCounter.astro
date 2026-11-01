@@ -1,0 +1,18 @@
+<a href="/statistiques/" rel="nofollow" data-visitor-counter>… visiteurs uniques.</a>
+<script>
+  const counters = [...document.querySelectorAll<HTMLElement>('[data-visitor-counter]')];
+  async function loadCounters() {
+    try {
+      const response = await fetch('/api/statistiques/count/');
+      if (!response.ok) return;
+      const data = await response.json();
+      if (Number.isSafeInteger(data.total)) for (const counter of counters) counter.textContent = `${new Intl.NumberFormat('fr-CH').format(data.total)} visiteurs uniques.`;
+    } catch { /* The journal remains readable if statistics are unavailable. */ }
+  }
+  if ('IntersectionObserver' in window && counters.length) {
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); void loadCounters(); }
+    }, { rootMargin: '200px' });
+    counters.forEach(counter => observer.observe(counter));
+  } else void loadCounters();
+</script>

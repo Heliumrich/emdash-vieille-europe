@@ -1,5 +1,6 @@
 ---
-import { Image, PortableText } from 'emdash/ui';
+import { PortableText } from 'emdash/ui';
+import CmsImage from './CmsImage.astro';
 import { photograph } from '../lib/photographs';
 import { imageVariants, ARTICLE_WIDTHS, LIGHTBOX_WIDTHS } from '../lib/image-variants';
 const { node } = Astro.props;
@@ -7,6 +8,6 @@ const photo = photograph(node);
 const [reading, lightbox] = await Promise.all([imageVariants(photo.image, Astro.site, ARTICLE_WIDTHS), imageVariants(photo.image, Astro.site, LIGHTBOX_WIDTHS)]);
 ---
 <figure>
-  <a href={lightbox.src || photo.full} data-lightbox data-lightbox-srcset={lightbox.srcset}><Image image={photo.image} quality={80} srcset={reading.srcset} sizes={photo.sizes} /></a>
+  <a href={lightbox.src || photo.full} data-lightbox data-lightbox-srcset={lightbox.srcset}><CmsImage image={photo.image} variants={reading} sizes={photo.sizes} /></a>
   {node.caption ? <figcaption>{node.caption}</figcaption> : node.captionBlocks ? <figcaption><PortableText value={node.captionBlocks} /></figcaption> : null}
 </figure>

@@ -1,0 +1,17 @@
+[Unit]
+Description=Publication statique Astro de Vieille-Europe
+After=network.target emdash.service
+
+[Service]
+Type=oneshot
+User=almalinux
+Group=almalinux
+WorkingDirectory=/var/www/v2-vieille-europe.ch
+Environment=NODE_ENV=production
+Environment=EMDASH_SITE_URL=https://test.vieille-europe.ch
+Environment=VE_AUTO_PUBLISH=1
+Environment=EMDASH_PREVIEW_PATH_PATTERN=/preview/{collection}/{id}/
+EnvironmentFile=-/var/www/v2-vieille-europe.ch/.env
+ExecStart=/usr/bin/node --env-file-if-exists=.env ./scripts/publisher.mjs
+TimeoutStartSec=20min
+Nice=10

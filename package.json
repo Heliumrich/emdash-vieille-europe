@@ -8,14 +8,17 @@
     "seed": "seed/seed.json"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "dev": "node --env-file-if-exists=.env scripts/astro.mjs dev",
+    "build": "node --env-file-if-exists=.env scripts/astro.mjs build",
     "preview": "astro preview",
     "start": "node ./dist/server/entry.mjs",
     "typecheck": "astro check",
-    "test": "node --test scripts/captions.test.mjs scripts/image-groups.test.mjs scripts/image-cache.test.mjs",
+    "test": "node --test scripts/captions.test.mjs scripts/image-groups.test.mjs scripts/image-cache.test.mjs scripts/publisher.test.mjs scripts/statistics.test.mjs",
     "warm:images": "node --env-file-if-exists=.env scripts/warm-images.mjs",
-    "verify:site": "node --env-file-if-exists=.env scripts/verify-site.mjs"
+    "verify:site": "node --env-file-if-exists=.env scripts/verify-site.mjs",
+    "publish:static": "node --env-file-if-exists=.env scripts/publisher.mjs",
+    "deploy:prepare": "node --env-file-if-exists=.env scripts/publisher.mjs --force --runtime",
+    "verify:static": "node scripts/verify-static.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^11.1.5",
@@ -23,10 +26,11 @@
     "@fontsource/libre-baskerville": "^5.3.0",
     "@fontsource/source-sans-3": "^5.3.1",
     "astro": "^7.3.2",
-    "emdash": "^1.3.0",
+    "emdash": "1.4.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "@vieille-europe/static-publisher": "file:plugins/static-publisher"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

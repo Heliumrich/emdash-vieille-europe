@@ -1,6 +1,6 @@
 ---
 import { formatDate, type Article } from '../lib/content';
-import { Image } from 'emdash/ui';
+import CmsImage from './CmsImage.astro';
 import LinkSignal from './LinkSignal.astro';
 import { COVER_IMAGE_SIZES } from '../../scripts/images.mjs';
 import { imageVariants, THUMBNAIL_WIDTHS } from '../lib/image-variants';
@@ -12,7 +12,7 @@ const thumbnails = await Promise.all(articles.map(article => imageVariants(artic
   {articles.map((article, index) => <article class="article-row">
     <div class="article-row-number" aria-hidden="true">{String(start + index).padStart(2, '0')}</div>
     <a class="article-row-image" href={`/blog/${article.slug}/`} tabindex="-1" aria-hidden="true">
-      <Image image={article.image || '/images/carnet-ferroviaire.svg'} quality={80} srcset={thumbnails[index].srcset} sizes={COVER_IMAGE_SIZES} alt="" width={480} height={320} loading="lazy" decoding="async" />
+      <CmsImage image={article.image || '/images/carnet-ferroviaire.svg'} variants={thumbnails[index]} sizes={COVER_IMAGE_SIZES} alt="" width={480} height={320} />
     </a>
     <div class="article-row-copy">
       <div class="article-meta"><time datetime={article.date}>{formatDate(article.date)}</time><span class="meta-dot" aria-hidden="true">·</span><span>{article.readingMinutes} min de lecture</span></div>

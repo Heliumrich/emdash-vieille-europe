@@ -26,8 +26,9 @@ const settings = await getSiteSettingsWithCacheHint();
 if (Astro.cache?.enabled) Astro.cache.set(settings.cacheHint);
 const siteTitle = settings.data.title || 'Vieille-Europe';
 const pageTitle = title ? `${title} · ${siteTitle}` : `${siteTitle} · Le carnet ferroviaire de Michel Pousaz`;
-const canonical = new URL(`${Astro.url.pathname.replace(/\/+$/, '')}/`, Astro.site);
-const page = createPublicPageContext({ Astro, kind: content ? 'content' : 'custom', pageType: publishedTime ? 'article' : 'website', title: pageTitle, description, canonical: canonical.href, image: new URL(image, Astro.site).href, content, siteName: siteTitle, seo: { robots: noindex || Astro.url.pathname.startsWith('/recent/') || Astro.response.status === 404 ? 'noindex, follow' : undefined }, articleMeta: { publishedTime, author: 'Michel Pousaz' } });
+const publicPath = content?.slug ? `${content.collection === 'posts' ? '/blog' : ''}/${content.slug}/` : Astro.url.pathname.replace(/^\/preview(?=\/)/, '');
+const canonical = new URL(`${publicPath.replace(/\/+$/, '')}/`, Astro.site);
+const page = createPublicPageContext({ Astro, kind: content ? 'content' : 'custom', pageType: publishedTime ? 'article' : 'website', title: pageTitle, description, canonical: canonical.href, image: new URL(image, Astro.site).href, content, siteName: siteTitle, seo: { robots: noindex || Astro.url.pathname.startsWith('/preview/') || Astro.url.pathname.startsWith('/recent/') || Astro.response.status === 404 ? 'noindex, follow' : undefined }, articleMeta: { publishedTime, author: 'Michel Pousaz' } });
 ---
 <!doctype html>
 <html lang="fr-CH">
@@ -49,6 +50,7 @@ const page = createPublicPageContext({ Astro, kind: content ? 'content' : 'custo
     <main id="contenu" tabindex="-1"><slot /></main>
     <Footer />
     <ImageViewer />
+    <script>import '../scripts/visits';</script>
     <EmDashBodyEnd page={page} />
   </body>
 </html>

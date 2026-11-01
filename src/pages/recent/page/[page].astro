@@ -1,4 +1,6 @@
 ---
+import { journalPaths } from '../../../../scripts/content-paths';
+export async function getStaticPaths() { return journalPaths(); }
 import Journal from '../../../components/Journal.astro';
 import { getJournalArticles, JOURNAL_PAGE_SIZE } from '../../../lib/journal';
 const articles = await getJournalArticles('desc', Astro);

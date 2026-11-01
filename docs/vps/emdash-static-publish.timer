@@ -1,0 +1,11 @@
+[Unit]
+Description=Vérification de la file de publication EmDash
+
+[Timer]
+OnBootSec=20s
+OnUnitInactiveSec=15s
+AccuracySec=2s
+Unit=emdash-static-publish.service
+
+[Install]
+WantedBy=timers.target

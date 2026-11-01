@@ -6,7 +6,7 @@ export function journalPageHref(page: number, order: JournalOrder = 'asc'): stri
   const base = order === 'desc' ? '/recent/' : '/';
   return page === 1 ? base : `${base}page/${page}/`;
 }
-export async function getJournalArticles(order: JournalOrder = 'asc', astro?: AstroGlobal): Promise<Article[]> {
+export async function getJournalArticles(order: JournalOrder = 'asc', astro?: Pick<AstroGlobal, 'cache'>): Promise<Article[]> {
   const articles = await getArticles(astro);
   return order === 'desc' ? articles.reverse() : articles;
 }

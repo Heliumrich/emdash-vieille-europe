@@ -1,0 +1,20 @@
+---
+export const prerender = false;
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { snapshot } from '../lib/statistics';
+const data = snapshot();
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+const number = (value: number) => new Intl.NumberFormat('fr-CH').format(value);
+---
+<BaseLayout title="Les visites du journal" noindex>
+  <section class="shell journal-entries statistics-page">
+    <header class="section-heading"><div><span class="eyebrow">Le journal en chiffres</span><h1>Les visites du journal</h1></div></header>
+    <p>{number(data.total)} visiteurs uniques et {number(data.visits)} pages consultées depuis l’installation de ce compteur.</p>
+    <div class="table-scroll"><table><thead><tr><th>Période</th><th>Visiteurs uniques</th><th>Pages consultées</th></tr></thead><tbody>
+      {data.periods.map(period => <tr><th>{period.days === 1 ? '24 heures' : `${period.days} jours`}</th><td>{number(period.uniqueVisitors)}</td><td>{number(period.visits)}</td></tr>)}
+    </tbody></table></div>
+    <p>Le compteur distingue les navigateurs avec un identifiant aléatoire, sans enregistrer d’adresse IP ni d’URL visitée. Les préférences Do Not Track et Global Privacy Control sont respectées. Les robots connus sont ignorés.</p>
+  </section>
+</BaseLayout>
+<style>.statistics-page { padding-bottom: 4rem; } table { width: 100%; border-collapse: collapse; margin-block: 2rem; } th,td { text-align: left; padding: .8rem; border-bottom: 1px solid var(--line); }</style>

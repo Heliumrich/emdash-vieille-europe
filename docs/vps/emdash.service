@@ -1,0 +1,22 @@
+[Unit]
+Description=EmDash CMS et prévisualisations (test.vieille-europe.ch)
+After=network.target
+
+[Service]
+Type=simple
+User=almalinux
+Group=almalinux
+WorkingDirectory=/var/www/v2-vieille-europe.ch
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=4321
+Environment=EMDASH_SITE_URL=https://test.vieille-europe.ch
+Environment=VE_AUTO_PUBLISH=1
+Environment=EMDASH_PREVIEW_PATH_PATTERN=/preview/{collection}/{id}/
+EnvironmentFile=-/var/www/v2-vieille-europe.ch/.env
+ExecStart=/usr/bin/node --env-file-if-exists=.env ./.site/runtime/server/entry.mjs
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

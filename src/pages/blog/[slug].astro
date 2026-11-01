@@ -1,47 +1,9 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import LinkSignal from '../../components/LinkSignal.astro';
-import { getArticles, formatDate } from '../../lib/content';
 import { getEmDashEntry } from 'emdash';
-import ArticleBody from '../../components/ArticleBody.astro';
-const { entry, cacheHint } = await getEmDashEntry('posts', Astro.params.slug!);
-if (!entry) return Astro.rewrite('/404/');
-if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
-const { toArticle } = await import('../../lib/content');
-const article = toArticle(entry);
-const articles = await getArticles(Astro);
-const index = articles.findIndex(item => item.id === article.id);
-const previous = articles[index - 1];
-const next = articles[index + 1];
-const articleNumber = index + 1;
-const articleCount = articles.length;
-const articleUrl = new URL(`/blog/${article.slug}/`, Astro.site ?? 'https://vieille-europe.ch');
-const structuredData = {
-  '@context': 'https://schema.org', '@type': 'BlogPosting',
-  headline: article.title, description: article.excerpt,
-  datePublished: article.date,
-  author: { '@type': 'Person', name: 'Michel Pousaz', url: new URL('/presentation/', Astro.site).href },
-  mainEntityOfPage: articleUrl.toString(),
-  ...(article.cover ? { image: article.cover } : {}),
-};
+import ArticlePage from '../../components/ArticlePage.astro';
+export { getStaticPaths } from '../../../scripts/post-paths';
+const { entry, error } = await getEmDashEntry('posts', Astro.params.slug!);
+if (error) throw error;
+if (!entry) { if (Astro.isPrerendered) throw new Error('Published post changed during build'); return Astro.rewrite('/404/'); }
 ---
-<BaseLayout title={article.title} description={article.excerpt} image={article.cover} publishedTime={article.date} content={{ collection: "posts", id: entry.data.id, slug: entry.id }}>
-  <script type="application/ld+json" set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')} />
-  <article class="article-page shell">
-    <nav class="breadcrumb" aria-label="Fil d’Ariane"><a href="/">Le journal</a><span aria-hidden="true">/</span><span>Récit {String(articleNumber).padStart(2, '0')}</span></nav>
-    <header class="article-header">
-      <span class="eyebrow">Le carnet ferroviaire de Michel Pousaz</span>
-      <h1 {...entry.edit.title}>{article.title}</h1>
-      <div class="article-header-bottom"><div class="article-meta"><time datetime={article.date}>{formatDate(article.date)}</time><span class="meta-dot" aria-hidden="true">·</span><span>{article.readingMinutes} min de lecture</span></div><span class="article-byline">Texte &amp; photographies · Michel Pousaz</span></div>
-    </header>
-    <div class="article-reading-layout">
-      <aside class="article-margin" aria-label="Repères de lecture"><span class="margin-number">{String(articleNumber).padStart(2, '0')}</span><span>Un récit parmi<br />les {articleCount} du journal.</span><span class="margin-line"></span><p>Les photographies<br />s’agrandissent<br />d’un clic.</p></aside>
-      <div class="prose article-prose" {...entry.edit.content}><ArticleBody value={entry.data.content} /></div>
-    </div>
-    <div class="article-signature"><span class="small-rule" aria-hidden="true"></span><span>Michel Pousaz</span><a href="mailto:contact@vieille-europe.ch">Écrire à l’auteur <LinkSignal /></a></div>
-    <nav class="article-neighbors" aria-label="Poursuivre la lecture">
-      {previous ? <a href={`/blog/${previous.slug}/`}><span class="eyebrow"><LinkSignal direction="left" /> Le récit précédent</span><span class="neighbor-title">{previous.title}</span><time datetime={previous.date}>{formatDate(previous.date)}</time></a> : <a href="/"><span class="eyebrow"><LinkSignal direction="left" /> Le journal</span><span class="neighbor-title">Retrouver tous les récits</span></a>}
-      {next ? <a href={`/blog/${next.slug}/`}><span class="eyebrow">Le récit suivant <LinkSignal /></span><span class="neighbor-title">{next.title}</span><time datetime={next.date}>{formatDate(next.date)}</time></a> : <a href="/"><span class="eyebrow">Le journal <LinkSignal /></span><span class="neighbor-title">Revenir au début du voyage</span></a>}
-    </nav>
-  </article>
-</BaseLayout>
+<ArticlePage entry={entry} />

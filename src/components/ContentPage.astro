@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleBody from './ArticleBody.astro';
+import type { ContentEntry } from 'emdash';
+import type { Page } from '../../emdash-env';
+interface Props { entry: ContentEntry<Page> }
+const { entry } = Astro.props;
+---
+
+<BaseLayout title={entry.data.title} section="presentation" content={{ collection: 'pages', id: entry.data.id, slug: entry.id }}>
+  <article class="shell article-page">
+    <header class="article-header"><h1 {...entry.edit.title}>{entry.data.title}</h1></header>
+    <div class="prose" {...entry.edit.content}><ArticleBody value={entry.data.content} /></div>
+  </article>
+</BaseLayout>

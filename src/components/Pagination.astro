@@ -1,9 +1,9 @@
 ---
 import LinkSignal from './LinkSignal.astro';
 import { journalPageHref, type JournalOrder } from '../lib/journal';
-interface Props { current: number; total: number; order?: JournalOrder; }
-const { current, total, order = 'asc' } = Astro.props;
-const pageHref = (page: number) => journalPageHref(page, order);
+interface Props { current: number; total: number; order?: JournalOrder; basePath?: string; }
+const { current, total, order = 'asc', basePath } = Astro.props;
+const pageHref = (page: number) => basePath ? (page === 1 ? basePath : `${basePath}page/${page}/`) : journalPageHref(page, order);
 ---
 {total > 1 && <nav class="pagination" aria-label="Pages du journal">
   {current > 1
