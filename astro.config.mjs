@@ -30,6 +30,6 @@ export default defineConfig({
 			}),
 			siteUrl: process.env.EMDASH_SITE_URL || "https://test.vieille-europe.ch",
 		}),
-	],
+	],
 	devToolbar: { enabled: false },
 });
